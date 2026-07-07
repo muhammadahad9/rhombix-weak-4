@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Marginalia — A Blogging Platform with Admin Panel</title>
+
+<!-- Bootstrap 5 -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<!-- Quill rich text editor -->
+<link href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" rel="stylesheet">
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --ink:#1E2229;
+  --ink-soft:#4B535F;
+  --paper:#EEF0EA;
+  --paper-card:#FFFFFF;
+  --line:#DBD9CC;
+  --evergreen:#1F6F5C;
+  --evergreen-dark:#164F42;
+  --ochre:#C9972E;
+  --danger:#B0413E;
+
+  --admin-bg:#12151B;
+  --admin-surface:#1B1F27;
+  --admin-surface-2:#232833;
+  --admin-line:#2E3542;
+  --admin-text:#E7E9EC;
+  --admin-text-soft:#93989F;
+  --mint:#4FD1A5;
+
+  /* admin accent palette (used across stat cards, avatars, charts) */
+  --acc-mint:#4FD1A5;
+  --acc-blue:#5B9BF7;
+  --acc-violet:#B18CF5;
+  --acc-amber:#F5B85B;
+  --acc-rose:#F0768E;
+  --acc-cyan:#5BD1D8;
+}
+
+*{box-sizing:border-box;}
+body{
+  font-family:'Inter',sans-serif;
+  background:var(--paper);
+  color:var(--ink);
+}
+.font-display{font-family:'Fraunces',serif;}
+.font-mono{font-family:'JetBrains Mono',monospace;}
+
+a{text-decoration:none;}
+.hidden{display:none !important;}
+
+/* ---------- Category Ribbon signature element ---------- */
+.ribbon{
+  position:relative;
+  display:inline-flex;
+  align-items:center;
+  gap:.4rem;
+  padding:.25rem .65rem .25rem .5rem;
+  font-family:'JetBrains Mono',monospace;
+  font-size:.7rem;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  color:#fff;
+  clip-path:polygon(0 0,100% 0,100% 100%,8px 100%,0 calc(100% - 8px));
+}
+.cat-essays{background:var(--evergreen);}
+.cat-field-notes{background:var(--ochre);}
+.cat-reviews{background:#3E5C76;}
+.cat-qa{background:var(--danger);}
+
+/* ---------- Public site ---------- */
+#public-app{min-height:100vh;display:flex;flex-direction:column;}
+
+.site-nav{
+  background:var(--paper);
+  border-bottom:2px solid var(--ink);
+  position:sticky; top:0; z-index:1000;
+}
+.brand-mark{
+  font-family:'Fraunces',serif;
+  font-weight:700;
+  font-size:1.6rem;
+  color:var(--ink);
+  letter-spacing:-.01em;
+}
+.brand-mark span{color:var(--evergreen);}
+.nav-link-custom{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.8rem;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+  color:var(--ink-soft);
+  padding:.4rem .7rem;
+}
+.nav-link-custom:hover, .nav-link-custom.active{color:var(--evergreen);}
+
+.hero-post{
+  border:2px solid var(--ink);
+  background:var(--paper-card);
+  overflow:hidden;
+}
+.hero-post img{width:100%; height:340px; object-fit:cover; display:block;}
+.hero-post .hero-copy{padding:2rem;}
+.hero-title{
+  font-family:'Fraunces',serif;
+  font-weight:600;
+  font-size:2.1rem;
+  line-height:1.12;
+  color:var(--ink);
+}
+.hero-title:hover{color:var(--evergreen);}
+.meta-line{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.75rem;
+  color:var(--ink-soft);
+  text-transform:uppercase;
+  letter-spacing:.03em;
+}
+
+.filter-bar{
+  display:flex; flex-wrap:wrap; gap:.5rem; align-items:center;
+}
+.filter-chip{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.75rem;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+  padding:.35rem .8rem;
+  border:1.5px solid var(--ink);
+  background:transparent;
+  color:var(--ink);
+  border-radius:999px;
+  cursor:pointer;
+  transition:.15s;
+}
+.filter-chip:hover{background:var(--ink); color:var(--paper);}
+.filter-chip.active{background:var(--evergreen); border-color:var(--evergreen); color:#fff;}
+
+.story-card{
+  background:var(--paper-card);
+  border:1.5px solid var(--line);
+  height:100%;
+  display:flex; flex-direction:column;
+  transition:.18s ease;
+  cursor:pointer;
+}
+.story-card:hover{border-color:var(--ink); transform:translateY(-3px);}
+.story-card img{width:100%; height:170px; object-fit:cover;}
+.story-card .story-body{padding:1.1rem 1.1rem 1.3rem; display:flex; flex-direction:column; gap:.55rem; flex:1;}
+.story-title{
+  font-family:'Fraunces',serif;
+  font-weight:600;
+  font-size:1.2rem;
+  line-height:1.25;
+  color:var(--ink);
+}
+.story-excerpt{font-size:.88rem; color:var(--ink-soft); flex:1;}
+
+.empty-state{
+  border:1.5px dashed var(--line);
+  padding:3rem 1rem;
+  text-align:center;
+  color:var(--ink-soft);
+  font-family:'JetBrains Mono',monospace;
+  font-size:.85rem;
+}
+
+/* Post detail */
+.article-wrap{max-width:760px; margin:0 auto;}
+.article-cover{width:100%; max-height:420px; object-fit:cover; border:2px solid var(--ink); margin-bottom:1.5rem;}
+.article-title{font-family:'Fraunces',serif; font-weight:700; font-size:2.5rem; line-height:1.1;}
+.article-content{font-size:1.08rem; line-height:1.8; color:#252a31;}
+.article-content p{margin-bottom:1.2rem;}
+.article-content h2,.article-content h3{font-family:'Fraunces',serif; margin-top:2rem;}
+.tag-pill{
+  font-family:'JetBrains Mono',monospace; font-size:.72rem; text-transform:uppercase;
+  border:1px solid var(--line); padding:.2rem .6rem; border-radius:999px; color:var(--ink-soft);
+}
+
+.comment-item{border-bottom:1px solid var(--line); padding:1rem 0;}
+.comment-avatar{
+  width:38px; height:38px; border-radius:50%; background:var(--evergreen); color:#fff;
+  display:flex; align-items:center; justify-content:center; font-family:'Fraunces',serif; font-weight:600;
+  flex-shrink:0;
+}
+
+.site-footer{
+  margin-top:auto;
+  background:var(--ink); color:#c9cdd3;
+  padding:2rem 0; font-family:'JetBrains Mono',monospace; font-size:.8rem;
+}
+.site-footer a{color:var(--mint);}
+
+/* ---------- Admin: Login ---------- */
+#admin-login-app{min-height:100vh; display:flex;}
+.login-brand{
+  background:var(--ink);
+  color:var(--paper);
+  flex:1;
+  display:flex; flex-direction:column; justify-content:center;
+  padding:4rem;
+  position:relative;
+  overflow:hidden;
+}
+.login-brand::before{
+  content:"";
+  position:absolute; inset:0;
+  background:
+    radial-gradient(circle at 15% 20%, rgba(31,111,92,.35), transparent 45%),
+    radial-gradient(circle at 85% 80%, rgba(201,151,46,.25), transparent 45%);
+}
+.login-brand-content{position:relative; z-index:1;}
+.login-quote{font-family:'Fraunces',serif; font-size:2rem; line-height:1.25; max-width:480px;}
+.login-form-side{
+  width:440px; flex-shrink:0; background:var(--paper-card);
+  display:flex; align-items:center; justify-content:center; padding:2rem;
+}
+.login-card{width:100%; max-width:340px;}
+.form-label-mono{font-family:'JetBrains Mono',monospace; font-size:.72rem; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft);}
+.btn-evergreen{background:var(--evergreen); border-color:var(--evergreen); color:#fff;}
+.btn-evergreen:hover{background:var(--evergreen-dark); border-color:var(--evergreen-dark); color:#fff;}
+.btn-outline-ink{border:1.5px solid var(--ink); color:var(--ink);}
+.btn-outline-ink:hover{background:var(--ink); color:var(--paper);}
+
+/* ---------- Admin: dashboard ---------- */
+#admin-app{min-height:100vh; display:flex; background:var(--admin-bg); color:var(--admin-text);}
+.admin-sidebar{
+  width:230px; flex-shrink:0; background:var(--admin-surface);
+  border-right:1px solid var(--admin-line);
+  display:flex; flex-direction:column;
+  padding:1.25rem 1rem;
+}
+.admin-logo{font-family:'Fraunces',serif; font-weight:700; font-size:1.3rem; color:#fff; margin-bottom:1.75rem;}
+.admin-logo span{color:var(--mint);}
+.admin-nav-link{
+  display:flex; align-items:center; gap:.65rem;
+  padding:.6rem .75rem; border-radius:8px;
+  color:var(--admin-text-soft); font-size:.9rem; font-weight:500;
+  margin-bottom:.15rem; cursor:pointer;
+}
+.admin-nav-link i{font-size:1rem; width:18px; text-align:center;}
+.admin-nav-link:hover{background:var(--admin-surface-2); color:#fff;}
+.admin-nav-link.active{background:var(--mint); color:#0b1410; font-weight:600;}
+.admin-nav-link.active i{color:#0b1410;}
+.admin-nav-link[data-tab="dashboard"] i{color:var(--acc-blue);}
+.admin-nav-link[data-tab="posts"] i{color:var(--acc-amber);}
+.admin-nav-link[data-tab="comments"] i{color:var(--acc-rose);}
+.admin-nav-link[data-tab="users"] i{color:var(--acc-violet);}
+.admin-main{flex:1; display:flex; flex-direction:column; min-width:0;}
+.admin-topbar{
+  height:64px; flex-shrink:0; border-bottom:1px solid var(--admin-line);
+  display:flex; align-items:center; justify-content:space-between; padding:0 1.75rem;
+  background:var(--admin-surface);
+}
+.admin-content{padding:1.75rem; overflow-y:auto; flex:1;}
+.admin-eyebrow{font-family:'JetBrains Mono',monospace; font-size:.72rem; color:var(--mint); text-transform:uppercase; letter-spacing:.06em;}
+.admin-h1{font-family:'Fraunces',serif; font-size:1.7rem; font-weight:600; color:#fff;}
+
+.stat-card{
+  background:var(--admin-surface); border:1px solid var(--admin-line); border-radius:10px; padding:1.25rem;
+  position:relative; overflow:hidden; display:flex; align-items:flex-start; justify-content:space-between; gap:.75rem;
+}
+.stat-card::before{
+  content:""; position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--accent, var(--mint));
+}
+.stat-icon{
+  width:42px; height:42px; border-radius:9px; display:flex; align-items:center; justify-content:center;
+  font-size:1.15rem; flex-shrink:0; background:color-mix(in srgb, var(--accent, var(--mint)) 18%, transparent);
+  color:var(--accent, var(--mint));
+}
+.stat-num{font-family:'Fraunces',serif; font-size:2rem; font-weight:600; color:#fff; line-height:1;}
+.stat-label{font-family:'JetBrains Mono',monospace; font-size:.72rem; text-transform:uppercase; color:var(--admin-text-soft); letter-spacing:.04em; margin-top:.35rem;}
+.stat-trend{font-family:'JetBrains Mono',monospace; font-size:.7rem; margin-top:.5rem; display:flex; align-items:center; gap:.25rem;}
+
+/* colored avatars by initial-bucket, used in user/comment lists */
+.avatar-chip{
+  width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  font-family:'Fraunces',serif; font-weight:600; font-size:.95rem; color:#0b1410; flex-shrink:0;
+}
+.av-0{background:var(--acc-mint);} .av-1{background:var(--acc-blue); color:#0b1220;}
+.av-2{background:var(--acc-violet); color:#1a0f2e;} .av-3{background:var(--acc-amber); color:#2e2003;}
+.av-4{background:var(--acc-rose); color:#2e0a13;} .av-5{background:var(--acc-cyan); color:#04262a;}
+
+.role-badge{
+  font-family:'JetBrains Mono',monospace; font-size:.68rem; text-transform:uppercase; letter-spacing:.03em;
+  padding:.2rem .55rem; border-radius:5px; font-weight:600;
+}
+.role-Admin{background:rgba(240,118,142,.16); color:var(--acc-rose);}
+.role-Editor{background:rgba(91,155,247,.16); color:var(--acc-blue);}
+.role-Author{background:rgba(177,140,245,.18); color:var(--acc-violet);}
+
+/* mini category bar chart on dashboard */
+.chart-row{display:flex; align-items:center; gap:.75rem; margin-bottom:.65rem;}
+.chart-label{width:100px; flex-shrink:0; font-family:'JetBrains Mono',monospace; font-size:.72rem; color:var(--admin-text-soft);}
+.chart-track{flex:1; height:10px; background:var(--admin-surface-2); border-radius:6px; overflow:hidden;}
+.chart-fill{height:100%; border-radius:6px;}
+.chart-count{width:26px; text-align:right; font-family:'JetBrains Mono',monospace; font-size:.75rem; color:var(--admin-text-soft);}
+
+.admin-panel{background:var(--admin-surface); border:1px solid var(--admin-line); border-radius:10px;}
+.admin-panel-head{padding:1rem 1.25rem; border-bottom:1px solid var(--admin-line); display:flex; align-items:center; justify-content:space-between;}
+
+table.admin-table{width:100%; color:var(--admin-text); margin:0;}
+table.admin-table th{
+  font-family:'JetBrains Mono',monospace; font-size:.68rem; text-transform:uppercase; letter-spacing:.05em;
+  color:var(--admin-text-soft); border-bottom:1px solid var(--admin-line); padding:.75rem 1.25rem; text-align:left; font-weight:500;
+}
+table.admin-table td{padding:.85rem 1.25rem; border-bottom:1px solid var(--admin-line); font-size:.88rem; vertical-align:middle;}
+table.admin-table tr:last-child td{border-bottom:none;}
+table.admin-table tr:hover td{background:var(--admin-surface-2);}
+
+.badge-status{font-family:'JetBrains Mono',monospace; font-size:.68rem; text-transform:uppercase; padding:.25rem .55rem; border-radius:5px; letter-spacing:.03em;}
+.badge-published{background:rgba(79,209,165,.15); color:var(--mint);}
+.badge-draft{background:rgba(201,151,46,.18); color:var(--ochre);}
+.badge-pending{background:rgba(176,65,62,.18); color:#e6716d;}
+.badge-approved{background:rgba(79,209,165,.15); color:var(--mint);}
+
+.icon-btn{
+  width:30px; height:30px; border-radius:6px; border:1px solid var(--admin-line); background:transparent;
+  color:var(--admin-text-soft); display:inline-flex; align-items:center; justify-content:center; font-size:.85rem;
+}
+.icon-btn:hover{background:var(--admin-surface-2); color:#fff;}
+.icon-btn.danger:hover{color:#e6716d; border-color:#e6716d;}
+
+.admin-input, .admin-select, .admin-textarea{
+  background:var(--admin-surface-2); border:1px solid var(--admin-line); color:#fff;
+}
+.admin-input::placeholder{color:var(--admin-text-soft);}
+.admin-input:focus, .admin-select:focus, .admin-textarea:focus{
+  background:var(--admin-surface-2); border-color:var(--mint); color:#fff; box-shadow:0 0 0 .2rem rgba(79,209,165,.15);
+}
+.form-label-admin{font-family:'JetBrains Mono',monospace; font-size:.72rem; text-transform:uppercase; color:var(--admin-text-soft); letter-spacing:.04em; margin-bottom:.35rem; display:block;}
+
+#quill-editor{background:#fff; color:#111; min-height:260px;}
+.ql-toolbar.ql-snow{border-color:var(--admin-line); background:var(--admin-surface-2);}
+.ql-container.ql-snow{border-color:var(--admin-line);}
+
+.image-drop{
+  border:1.5px dashed var(--admin-line); border-radius:8px; padding:1.25rem; text-align:center; cursor:pointer; color:var(--admin-text-soft);
+}
+.image-drop:hover{border-color:var(--mint); color:var(--mint);}
+.cover-preview{width:100%; height:160px; object-fit:cover; border-radius:8px; border:1px solid var(--admin-line);}
+
+.toast-custom{
+  position:fixed; bottom:1.5rem; right:1.5rem; z-index:2000;
+  background:var(--ink); color:#fff; padding:.8rem 1.2rem; border-radius:8px;
+  font-family:'JetBrains Mono',monospace; font-size:.82rem;
+  box-shadow:0 8px 24px rgba(0,0,0,.25);
+  display:flex; align-items:center; gap:.6rem;
+}
+.toast-custom i{color:var(--mint);}
+
+::-webkit-scrollbar{width:10px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--admin-line); border-radius:5px;}
+</style>
+</head>
+<body>
+
+<!-- =========================================================
+     PUBLIC BLOG
+========================================================= -->
+<div id="public-app">
+
+  <!-- NAV -->
+  <nav class="site-nav py-3">
+    <div class="container d-flex align-items-center justify-content-between flex-wrap gap-3">
+      <a href="#" class="brand-mark" onclick="Router.go('home');return false;">Margin<span>alia</span></a>
+      <div class="d-flex align-items-center gap-1 flex-wrap">
+        <a href="#" class="nav-link-custom" onclick="Router.go('home');return false;">Home</a>
+        <a href="#" class="nav-link-custom" onclick="Router.go('home');Store.setCategoryFilter('Field Notes');return false;">Field Notes</a>
+        <a href="#" class="nav-link-custom" onclick="Router.go('home');Store.setCategoryFilter('Essays');return false;">Essays</a>
+        <a href="#" class="nav-link-custom" onclick="Router.go('home');Store.setCategoryFilter('Reviews');return false;">Reviews</a>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <input id="nav-search" type="text" class="form-control form-control-sm" style="width:190px;" placeholder="Search posts…" oninput="Public.renderGrid()">
+        <a href="#" class="btn btn-sm btn-outline-ink" onclick="Router.go('admin-login');return false;">
+          <i class="bi bi-shield-lock"></i> Admin
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HOME -->
+  <main id="view-home" class="container py-4 flex-grow-1">
+    <div id="featured-slot" class="mb-4"></div>
+
+    <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+      <div class="filter-bar" id="filter-bar"></div>
+      <span class="meta-line" id="result-count"></span>
+    </div>
+
+    <div class="row g-3" id="story-grid"></div>
+  </main>
+
+  <!-- POST DETAIL -->
+  <main id="view-post" class="container py-4 flex-grow-1 hidden">
+    <button class="btn btn-sm btn-outline-ink mb-4" onclick="Router.go('home');return false;">
+      <i class="bi bi-arrow-left"></i> Back to all posts
+    </button>
+    <div class="article-wrap" id="article-slot"></div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container d-flex justify-content-between flex-wrap gap-2">
+      <span>© 2026 Marginalia — notes worth keeping.</span>
+      <a href="#" onclick="Router.go('admin-login');return false;">Admin panel →</a>
+    </div>
+  </footer>
+</div>
+
+
+<!-- =========================================================
+     ADMIN LOGIN
+========================================================= -->
+<div id="admin-login-app" class="hidden">
+  <div class="login-brand">
+    <div class="login-brand-content">
+      <div class="admin-eyebrow mb-3">Marginalia / Admin Console</div>
+      <p class="login-quote">"Every post starts as a draft. Every draft deserves an editor."</p>
+    </div>
+  </div>
+  <div class="login-form-side">
+    <div class="login-card">
+      <a href="#" class="d-inline-flex align-items-center gap-1 mb-4 text-decoration-none" style="color:var(--ink-soft); font-size:.85rem;" onclick="Router.go('home');return false;">
+        <i class="bi bi-arrow-left"></i> Back to site
+      </a>
+      <h1 class="font-display fw-semibold mb-1" style="font-size:1.6rem;">Sign in</h1>
+      <p class="text-secondary mb-4" style="font-size:.9rem;">Manage posts, comments, and users.</p>
+
+      <div id="login-error" class="alert alert-danger py-2 px-3 hidden" style="font-size:.85rem;"></div>
+
+      <form onsubmit="Auth.login(event)">
+        <div class="mb-3">
+          <label class="form-label-mono">Email</label>
+          <input type="text" class="form-control" id="login-email" value="admin@marginalia.blog" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label-mono">Password</label>
+          <input type="password" class="form-control" id="login-password" value="admin123" required>
+        </div>
+        <button type="submit" class="btn btn-evergreen w-100 mb-2">Sign in</button>
+        <p class="text-secondary text-center" style="font-size:.78rem;">Demo credentials are pre-filled. This is an in-browser demo — data resets on reload.</p>
+      </form>
+    </div>
+  </div>
+</div>
+
+
+<!-- =========================================================
+     ADMIN DASHBOARD
+========================================================= -->
+<div id="admin-app" class="hidden">
+  <aside class="admin-sidebar">
+    <div class="admin-logo">Margin<span>alia</span></div>
+    <div class="admin-nav-link" data-tab="dashboard" onclick="Admin.showTab('dashboard')"><i class="bi bi-grid-1x2"></i> Dashboard</div>
+    <div class="admin-nav-link" data-tab="posts" onclick="Admin.showTab('posts')"><i class="bi bi-file-earmark-text"></i> Posts</div>
+    <div class="admin-nav-link" data-tab="comments" onclick="Admin.showTab('comments')"><i class="bi bi-chat-left-text"></i> Comments</div>
+    <div class="admin-nav-link" data-tab="users" onclick="Admin.showTab('users')"><i class="bi bi-people"></i> Users</div>
+    <div class="mt-auto">
+      <div class="admin-nav-link" onclick="Router.go('home')"><i class="bi bi-box-arrow-up-right"></i> View site</div>
+      <div class="admin-nav-link" onclick="Auth.logout()"><i class="bi bi-box-arrow-right"></i> Log out</div>
+    </div>
+  </aside>
+
+  <div class="admin-main">
+    <div class="admin-topbar">
+      <div>
+        <div class="admin-eyebrow" id="admin-topbar-eyebrow">Admin</div>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <span class="font-mono" style="font-size:.8rem; color:var(--admin-text-soft);" id="admin-current-user"></span>
+        <div class="avatar-chip av-1" style="width:32px;height:32px;font-size:.85rem;">A</div>
+      </div>
+    </div>
+    <div class="admin-content" id="admin-content"></div>
+  </div>
+</div>
+
+<div id="toast-root"></div>
+
+<!-- Templates rendered via JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
+<script>
+/* =========================================================
+   DATA LAYER (in-memory — no backend / no localStorage)
+========================================================= */
+const CATEGORY_CLASS = {
+  "Essays":"cat-essays",
+  "Field Notes":"cat-field-notes",
+  "Reviews":"cat-reviews",
+  "Q&A":"cat-qa"
+};
+
+const Store = {
+  categoryFilter: "All",
+  searchTerm: "",
+  currentPostId: null,
+
+  users: [
+    {id:1, name:"Amara Osei", email:"admin@marginalia.blog", role:"Admin"},
+    {id:2, name:"Devon Park", email:"devon@marginalia.blog", role:"Editor"},
+    {id:3, name:"Lina Torres", email:"lina@marginalia.blog", role:"Author"},
+    {id:4, name:"Wren Talbot", email:"wren@marginalia.blog", role:"Author"},
+    {id:5, name:"Priya Sharma", email:"priya@marginalia.blog", role:"Editor"},
+    {id:6, name:"Marcus Jin", email:"marcus@marginalia.blog", role:"Author"}
+  ],
+
+  posts: [
+    {
+      id:1, title:"The Quiet Case for Writing by Hand",
+      category:"Essays", status:"Published", author:"Amara Osei",
+      date:"2026-06-28", readTime:"6 min read",
+      cover:"https://images.unsplash.com/photo-1455390582262-044cdead277a?w=1200&q=80",
+      excerpt:"In a world of autocomplete, the deliberate friction of a pen might be exactly what our thinking needs.",
+      content:"<p>There is a particular kind of silence that settles over a room when someone is writing by hand. No keyboard clatter, no autosave chime — just the soft scratch of a nib finding its way across paper.</p><p>We tend to treat this as nostalgia, a quaint preference for the analog. But the friction of handwriting does something a keyboard doesn't: it slows the gap between thought and record just enough for the thought to finish forming.</p><h2>The tax of speed</h2><p>Typing is fast, and fast is usually good. But fast also means our fingers can outrun our thinking, filling the page with the first draft of an idea rather than its considered shape.</p><p>Handwriting reintroduces a small, useful tax — one paid in time, and collected in clarity.</p>",
+      tags:["writing","focus","habits"]
+    },
+    {
+      id:2, title:"Notes From a Week Without Notifications",
+      category:"Field Notes", status:"Published", author:"Lina Torres",
+      date:"2026-06-25", readTime:"4 min read",
+      cover:"https://images.unsplash.com/photo-1517842645767-c639042777db?w=1200&q=80",
+      excerpt:"I turned off every push notification for seven days. Here is what my attention span looked like on the other side.",
+      content:"<p>Day one felt like withdrawal. I reached for my phone eleven times in the first hour, out of pure muscle memory, before realizing there was nothing waiting for me.</p><p>By day four, the reaching had mostly stopped. By day seven, I noticed something unexpected: boredom had returned, and with it, a few genuinely new ideas.</p><h3>What I'd keep</h3><p>Not all of it. But the quiet mornings, certainly.</p>",
+      tags:["attention","technology","experiment"]
+    },
+    {
+      id:3, title:"Review: The Unhurried Kitchen",
+      category:"Reviews", status:"Published", author:"Devon Park",
+      date:"2026-06-20", readTime:"5 min read",
+      cover:"https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=1200&q=80",
+      excerpt:"A cookbook that asks you to slow down, and mostly earns the request.",
+      content:"<p>Most cookbooks sell speed: thirty-minute meals, one-pan everything. <em>The Unhurried Kitchen</em> makes the opposite pitch, and it's a refreshing one.</p><p>The recipes lean on technique over shortcuts, and the payoff — a slow-braised lamb shoulder, in particular — justifies the extra hour.</p>",
+      tags:["cooking","books"]
+    },
+    {
+      id:4, title:"Ask Us Anything: Starting a Reading Habit",
+      category:"Q&A", status:"Draft", author:"Amara Osei",
+      date:"2026-07-01", readTime:"3 min read",
+      cover:"https://images.unsplash.com/photo-1512820790803-83ca734da794?w=1200&q=80",
+      excerpt:"Readers wrote in with their biggest obstacles to reading more. We tried to answer honestly.",
+      content:"<p><strong>Q: I buy books and never finish them. What's wrong with me?</strong></p><p>Nothing. An unfinished book is not a failure — it's information about what you actually wanted to read.</p>",
+      tags:["reading","advice"]
+    },
+    {
+      id:5, title:"On Keeping a Commonplace Book",
+      category:"Essays", status:"Published", author:"Devon Park",
+      date:"2026-06-14", readTime:"7 min read",
+      cover:"https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=1200&q=80",
+      excerpt:"Long before bookmarks and highlights, readers copied the lines that mattered into a single notebook.",
+      content:"<p>A commonplace book is deceptively simple: a notebook where you copy down passages, quotes, and observations worth keeping.</p><p>Its value isn't storage — it's the act of transcription itself, which forces a second, slower reading.</p>",
+      tags:["writing","reading","history"]
+    },
+    {
+      id:6, title:"Slow Travel: A Week in One Neighborhood",
+      category:"Field Notes", status:"Published", author:"Lina Torres",
+      date:"2026-06-10", readTime:"5 min read",
+      cover:"https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=1200&q=80",
+      excerpt:"Instead of seeing a new city, I tried living in four square blocks of it.",
+      content:"<p>The itinerary was intentionally short: one neighborhood, seven days, no landmarks. What I found instead were regulars — the same baker, the same bench, the same stray cat.</p>",
+      tags:["travel","slowness"]
+    },
+    {
+      id:7, title:"Review: Six Months With a Mechanical Keyboard",
+      category:"Reviews", status:"Published", author:"Marcus Jin",
+      date:"2026-06-05", readTime:"4 min read",
+      cover:"https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=1200&q=80",
+      excerpt:"It's louder, slower to type on at first, and I have no intention of going back.",
+      content:"<p>I switched to a mechanical keyboard expecting a novelty. Six months later it's the only piece of hardware I've genuinely bonded with.</p><p>The tactile feedback turns typing into something closer to an instrument than a tool — which, for a writer, matters more than I expected.</p>",
+      tags:["tools","writing"]
+    },
+    {
+      id:8, title:"Ask Us Anything: Dealing With Writer's Block",
+      category:"Q&A", status:"Published", author:"Priya Sharma",
+      date:"2026-05-30", readTime:"5 min read",
+      cover:"https://images.unsplash.com/photo-1455390582262-044cdead277a?w=1200&q=80",
+      excerpt:"Readers asked what actually works when the page won't fill itself. Some answers surprised us.",
+      content:"<p><strong>Q: What's the one trick that gets you writing again?</strong></p><p>Lowering the bar. Not 'write well' — just 'write badly, on purpose, for ten minutes.' The block is usually about pressure, not ability.</p>",
+      tags:["writing","advice"]
+    },
+    {
+      id:9, title:"Field Notes: A Season of Birdwatching From My Window",
+      category:"Field Notes", status:"Draft", author:"Wren Talbot",
+      date:"2026-07-03", readTime:"6 min read",
+      cover:"https://images.unsplash.com/photo-1444464666168-49d633b86797?w=1200&q=80",
+      excerpt:"I never left my apartment for this one. Turns out the windowsill was enough.",
+      content:"<p>Draft in progress — logging sightings from the fire escape through spring. Sparrows first, then a surprising number of warblers passing through in May.</p>",
+      tags:["nature","field-notes"]
+    },
+    {
+      id:10, title:"The Case for Reading the Same Book Twice",
+      category:"Essays", status:"Published", author:"Lina Torres",
+      date:"2026-05-22", readTime:"5 min read",
+      cover:"https://images.unsplash.com/photo-1495640388908-05fa85288e61?w=1200&q=80",
+      excerpt:"A first reading tells you what happens. A second tells you why it mattered.",
+      content:"<p>We treat rereading as a luxury reserved for favorites, when it might be the more honest way to read anything worth finishing.</p><p>The plot no longer competes for your attention the second time, which leaves room to notice everything the plot was quietly built on.</p>",
+      tags:["reading","books"]
+    },
+    {
+      id:11, title:"Draft: Notes on Slow Journalism",
+      category:"Essays", status:"Draft", author:"Devon Park",
+      date:"2026-07-04", readTime:"3 min read",
+      cover:"https://images.unsplash.com/photo-1495020689067-958852a7765e?w=1200&q=80",
+      excerpt:"An unfinished argument for fewer, slower stories over a constant feed of them.",
+      content:"<p>Early draft — thinking through what a monthly-only news publication would actually feel like to read, and whether anyone would wait for it.</p>",
+      tags:["media","slowness"]
+    }
+  ],
+  nextPostId: 12,
+
+  comments: [
+    {id:1, postId:1, author:"Marcus J.", text:"This completely reframed how I think about my morning journaling habit. Thank you.", status:"Approved", date:"2026-06-29"},
+    {id:2, postId:1, author:"Priya S.", text:"Counterpoint: my handwriting is illegible even to me. Typing wins for accuracy at least!", status:"Approved", date:"2026-06-29"},
+    {id:3, postId:2, author:"Wren T.", text:"Doing this starting Monday. Terrified.", status:"Approved", date:"2026-06-26"},
+    {id:4, postId:3, author:"Alicia R.", text:"Bought this after reading your review, the lamb recipe alone was worth it.", status:"Pending", date:"2026-07-02"},
+    {id:5, postId:5, author:"Sam O.", text:"I've kept one of these for a decade now — it's the best writing habit I never meant to start.", status:"Pending", date:"2026-07-03"},
+    {id:6, postId:7, author:"Talia R.", text:"The clicky switches are so worth it, been meaning to make the switch myself.", status:"Approved", date:"2026-06-06"},
+    {id:7, postId:7, author:"Ben K.", text:"My upstairs neighbors would like a word about that noise.", status:"Pending", date:"2026-06-07"},
+    {id:8, postId:8, author:"Noor H.", text:"'Write badly on purpose' is the most freeing advice I've read all year.", status:"Approved", date:"2026-05-31"},
+    {id:9, postId:8, author:"Chris D.", text:"Tried this today, ten minutes turned into forty five. It works.", status:"Pending", date:"2026-06-01"},
+    {id:10, postId:10, author:"Yuki M.", text:"Rereading Beloved this year and finding an entirely different book. Great piece.", status:"Approved", date:"2026-05-23"},
+    {id:11, postId:2, author:"Fatima Z.", text:"Week two is the hardest part in my experience, glad you pushed through.", status:"Approved", date:"2026-06-27"},
+    {id:12, postId:6, author:"Owen P.", text:"Doing this in my own city next month, thank you for the nudge.", status:"Pending", date:"2026-06-12"}
+  ],
+  nextCommentId: 13,
+
+  setCategoryFilter(cat){ this.categoryFilter = cat; Public.renderAll(); },
+
+  getFilteredPosts(){
+    const term = (document.getElementById('nav-search')?.value || "").toLowerCase();
+    return this.posts.filter(p=>{
+      if(p.status !== "Published") return false;
+      if(this.categoryFilter !== "All" && p.category !== this.categoryFilter) return false;
+      if(term && !(p.title.toLowerCase().includes(term) || p.excerpt.toLowerCase().includes(term) || p.tags.join(" ").toLowerCase().includes(term))) return false;
+      return true;
+    });
+  },
+
+  getPost(id){ return this.posts.find(p=>p.id===id); },
+  getCommentsForPost(id){ return this.comments.filter(c=>c.postId===id && c.status==="Approved"); }
+};
+
+/* =========================================================
+   ROUTER
+========================================================= */
+const Router = {
+  go(view, opts={}){
+    document.getElementById('public-app').classList.add('hidden');
+    document.getElementById('admin-login-app').classList.add('hidden');
+    document.getElementById('admin-app').classList.add('hidden');
+
+    if(view==='home'){
+      document.getElementById('public-app').classList.remove('hidden');
+      document.getElementById('view-home').classList.remove('hidden');
+      document.getElementById('view-post').classList.add('hidden');
+      Public.renderAll();
+    } else if(view==='post'){
+      document.getElementById('public-app').classList.remove('hidden');
+      document.getElementById('view-home').classList.add('hidden');
+      document.getElementById('view-post').classList.remove('hidden');
+      Store.currentPostId = opts.id;
+      Public.renderPost(opts.id);
+    } else if(view==='admin-login'){
+      if(Auth.currentUser){ Router.go('admin'); return; }
+      document.getElementById('admin-login-app').classList.remove('hidden');
+    } else if(view==='admin'){
+      document.getElementById('admin-app').classList.remove('hidden');
+      document.getElementById('admin-current-user').textContent = Auth.currentUser?.name || "";
+      Admin.showTab('dashboard');
+    }
+    window.scrollTo(0,0);
+  }
+};
+
+/* =========================================================
+   AUTH
+========================================================= */
+const Auth = {
+  currentUser: null,
+  login(e){
+    e.preventDefault();
+    const email = document.getElementById('login-email').value.trim();
+    const pass = document.getElementById('login-password').value.trim();
+    const errBox = document.getElementById('login-error');
+    if(email === "admin@marginalia.blog" && pass === "admin123"){
+      this.currentUser = Store.users.find(u=>u.email===email) || {name:"Admin", email};
+      errBox.classList.add('hidden');
+      Router.go('admin');
+      Toast.show('Signed in successfully');
+    } else {
+      errBox.textContent = "Incorrect email or password. Try admin@marginalia.blog / admin123.";
+      errBox.classList.remove('hidden');
+    }
+  },
+  logout(){
+    this.currentUser = null;
+    Router.go('admin-login');
+    Toast.show('Logged out');
+  }
+};
+
+/* =========================================================
+   TOAST
+========================================================= */
+const Toast = {
+  show(msg){
+    const root = document.getElementById('toast-root');
+    const el = document.createElement('div');
+    el.className = 'toast-custom';
+    el.innerHTML = `<i class="bi bi-check-circle-fill"></i> ${msg}`;
+    root.appendChild(el);
+    setTimeout(()=>{ el.style.opacity='0'; el.style.transition='.3s'; setTimeout(()=>el.remove(),300); }, 2400);
+  }
+};
+
+/* =========================================================
+   PUBLIC SITE RENDERING
+========================================================= */
+const Public = {
+  renderAll(){
+    this.renderFeatured();
+    this.renderFilters();
+    this.renderGrid();
+  },
+
+  renderFeatured(){
+    const featured = Store.posts.find(p=>p.status==="Published");
+    if(!featured){ document.getElementById('featured-slot').innerHTML=""; return; }
+    document.getElementById('featured-slot').innerHTML = `
+      <div class="hero-post row g-0" onclick="Router.go('post',{id:${featured.id}})" style="cursor:pointer;">
+        <div class="col-md-6"><img src="${featured.cover}" alt=""></div>
+        <div class="col-md-6 hero-copy d-flex flex-column justify-content-center">
+          <span class="ribbon ${CATEGORY_CLASS[featured.category]} mb-2" style="width:fit-content;">${featured.category}</span>
+          <div class="hero-title mb-2">${featured.title}</div>
+          <p class="text-secondary mb-2">${featured.excerpt}</p>
+          <div class="meta-line">By ${featured.author} · ${Public.fmtDate(featured.date)} · ${featured.readTime}</div>
+        </div>
+      </div>`;
+  },
+
+  renderFilters(){
+    const cats = ["All","Essays","Field Notes","Reviews","Q&A"];
+    document.getElementById('filter-bar').innerHTML = cats.map(c=>`
+      <button class="filter-chip ${Store.categoryFilter===c?'active':''}" onclick="Store.setCategoryFilter('${c}')">${c}</button>
+    `).join('');
+  },
+
+  renderGrid(){
+    const posts = Store.getFilteredPosts();
+    document.getElementById('result-count').textContent = `${posts.length} post${posts.length!==1?'s':''}`;
+    const grid = document.getElementById('story-grid');
+    if(posts.length===0){
+      grid.innerHTML = `<div class="col-12"><div class="empty-state"><i class="bi bi-inboxes fs-3 d-block mb-2"></i>No posts match your search or filter yet.</div></div>`;
+      return;
+    }
+    grid.innerHTML = posts.map(p=>`
+      <div class="col-md-4 col-sm-6">
+        <div class="story-card" onclick="Router.go('post',{id:${p.id}})">
+          <img src="${p.cover}" alt="">
+          <div class="story-body">
+            <span class="ribbon ${CATEGORY_CLASS[p.category]}" style="width:fit-content;">${p.category}</span>
+            <div class="story-title">${p.title}</div>
+            <div class="story-excerpt">${p.excerpt}</div>
+            <div class="meta-line">${p.author} · ${Public.fmtDate(p.date)} · ${p.readTime}</div>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  },
+
+  renderPost(id){
+    const p = Store.getPost(id);
+    if(!p) return;
+    const comments = Store.getCommentsForPost(id);
+    document.getElementById('article-slot').innerHTML = `
+      <span class="ribbon ${CATEGORY_CLASS[p.category]} mb-3" style="width:fit-content;">${p.category}</span>
+      <h1 class="article-title mb-2">${p.title}</h1>
+      <div class="meta-line mb-3">By ${p.author} · ${Public.fmtDate(p.date)} · ${p.readTime}</div>
+      <img src="${p.cover}" class="article-cover" alt="">
+      <div class="article-content">${p.content}</div>
+      <div class="d-flex gap-2 flex-wrap mb-4 mt-3">
+        ${p.tags.map(t=>`<span class="tag-pill">#${t}</span>`).join('')}
+      </div>
+      <hr class="my-4">
+      <h5 class="font-display fw-semibold mb-3">Comments (${comments.length})</h5>
+      <div id="comments-list">
+        ${comments.length ? comments.map(c=>`
+          <div class="comment-item d-flex gap-3">
+            <div class="comment-avatar">${c.author.charAt(0)}</div>
+            <div>
+              <div class="fw-semibold" style="font-size:.92rem;">${c.author} <span class="text-secondary fw-normal meta-line ms-1">${Public.fmtDate(c.date)}</span></div>
+              <div style="font-size:.92rem;">${c.text}</div>
+            </div>
+          </div>
+        `).join('') : `<p class="text-secondary" style="font-size:.9rem;">Be the first to comment.</p>`}
+      </div>
+      <form class="mt-4" onsubmit="Public.submitComment(event, ${p.id})">
+        <div class="row g-2">
+          <div class="col-md-4"><input required class="form-control" id="comment-name" placeholder="Your name"></div>
+          <div class="col-md-8"><input required class="form-control" id="comment-text" placeholder="Add to the discussion…"></div>
+        </div>
+        <button class="btn btn-evergreen btn-sm mt-2" type="submit">Post comment</button>
+        <span class="meta-line ms-2">Comments are reviewed by an admin before appearing publicly.</span>
+      </form>
+    `;
+  },
+
+  submitComment(e, postId){
+    e.preventDefault();
+    const name = document.getElementById('comment-name').value.trim();
+    const text = document.getElementById('comment-text').value.trim();
+    if(!name || !text) return;
+    Store.comments.push({
+      id: Store.nextCommentId++, postId, author:name, text,
+      status:"Pending", date:new Date().toISOString().slice(0,10)
+    });
+    Toast.show('Comment submitted for review');
+    e.target.reset();
+  },
+
+  fmtDate(d){
+    return new Date(d+"T00:00:00").toLocaleDateString('en-US',{month:'short', day:'numeric', year:'numeric'});
+  }
+};
+
+/* =========================================================
+   ADMIN PANEL
+========================================================= */
+let quill = null;
+
+const Admin = {
+  activeTab: 'dashboard',
+
+  showTab(tab){
+    this.activeTab = tab;
+    document.querySelectorAll('.admin-nav-link[data-tab]').forEach(el=>{
+      el.classList.toggle('active', el.dataset.tab===tab);
+    });
+    document.getElementById('admin-topbar-eyebrow').textContent = ({
+      dashboard:'Overview', posts:'Content / Posts', comments:'Content / Comments', users:'Access / Users'
+    })[tab];
+
+    const map = {
+      dashboard: this.renderDashboard,
+      posts: this.renderPosts,
+      comments: this.renderComments,
+      users: this.renderUsers
+    };
+    map[tab].call(this);
+  },
+
+  renderDashboard(){
+    const posts = Store.posts;
+    const published = posts.filter(p=>p.status==="Published").length;
+    const drafts = posts.filter(p=>p.status==="Draft").length;
+    const pending = Store.comments.filter(c=>c.status==="Pending").length;
+    const users = Store.users.length;
+
+    const cats = ["Essays","Field Notes","Reviews","Q&A"];
+    const catColors = {"Essays":"var(--acc-mint)","Field Notes":"var(--acc-amber)","Reviews":"var(--acc-blue)","Q&A":"var(--acc-rose)"};
+    const maxCount = Math.max(1, ...cats.map(c=>posts.filter(p=>p.category===c).length));
+
+    document.getElementById('admin-content').innerHTML = `
+      <div class="admin-h1 mb-4">Welcome back, ${Auth.currentUser?.name?.split(' ')[0] || 'Admin'}</div>
+      <div class="row g-3 mb-4">
+        <div class="col-md-3 col-6"><div class="stat-card" style="--accent:var(--acc-blue);">
+          <div><div class="stat-num">${posts.length}</div><div class="stat-label">Total posts</div></div>
+          <div class="stat-icon"><i class="bi bi-file-earmark-text"></i></div>
+        </div></div>
+        <div class="col-md-3 col-6"><div class="stat-card" style="--accent:var(--acc-mint);">
+          <div><div class="stat-num">${published}</div><div class="stat-label">Published</div></div>
+          <div class="stat-icon"><i class="bi bi-check-circle"></i></div>
+        </div></div>
+        <div class="col-md-3 col-6"><div class="stat-card" style="--accent:var(--acc-amber);">
+          <div><div class="stat-num">${drafts}</div><div class="stat-label">Drafts</div></div>
+          <div class="stat-icon"><i class="bi bi-pencil-square"></i></div>
+        </div></div>
+        <div class="col-md-3 col-6"><div class="stat-card" style="--accent:var(--acc-rose);">
+          <div><div class="stat-num">${pending}</div><div class="stat-label">Comments to review</div></div>
+          <div class="stat-icon"><i class="bi bi-chat-left-dots"></i></div>
+        </div></div>
+      </div>
+
+      <div class="row g-3 mb-4">
+        <div class="col-lg-7">
+          <div class="admin-panel h-100">
+            <div class="admin-panel-head"><span class="fw-semibold" style="color:#fff;">Recent posts</span>
+              <button class="btn btn-sm" style="background:var(--mint); color:#0b1410; font-weight:600;" onclick="Admin.showTab('posts')">Manage posts</button>
+            </div>
+            <table class="admin-table">
+              <thead><tr><th>Title</th><th>Category</th><th>Status</th><th>Date</th></tr></thead>
+              <tbody>
+                ${posts.slice().reverse().slice(0,5).map(p=>`
+                  <tr><td>${p.title}</td><td>${p.category}</td>
+                  <td><span class="badge-status ${p.status==='Published'?'badge-published':'badge-draft'}">${p.status}</span></td>
+                  <td class="font-mono" style="font-size:.78rem;">${p.date}</td></tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="col-lg-5">
+          <div class="admin-panel h-100 p-3">
+            <span class="fw-semibold d-block mb-3" style="color:#fff;">Posts by category</span>
+            ${cats.map(c=>{
+              const count = posts.filter(p=>p.category===c).length;
+              const pct = Math.round((count/maxCount)*100);
+              return `
+              <div class="chart-row">
+                <div class="chart-label">${c}</div>
+                <div class="chart-track"><div class="chart-fill" style="width:${pct}%; background:${catColors[c]};"></div></div>
+                <div class="chart-count">${count}</div>
+              </div>`;
+            }).join('')}
+            <hr style="border-color:var(--admin-line);">
+            <div class="d-flex justify-content-between font-mono" style="font-size:.78rem; color:var(--admin-text-soft);">
+              <span><i class="bi bi-people me-1" style="color:var(--acc-violet);"></i>${users} team members</span>
+              <span><i class="bi bi-chat-left-text me-1" style="color:var(--acc-cyan);"></i>${Store.comments.length} total comments</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  },
+
+  /* ---------------- POSTS ---------------- */
+  renderPosts(){
+    document.getElementById('admin-content').innerHTML = `
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="admin-h1">Posts</div>
+        <button class="btn" style="background:var(--mint); color:#0b1410; font-weight:600;" onclick="Admin.openEditor()"><i class="bi bi-plus-lg"></i> New post</button>
+      </div>
+      <div class="admin-panel">
+        <table class="admin-table">
+          <thead><tr><th>Title</th><th>Category</th><th>Author</th><th>Status</th><th>Date</th><th></th></tr></thead>
+          <tbody id="posts-tbody"></tbody>
+        </table>
+      </div>
+    `;
+    this.refreshPostsTable();
+  },
+
+  refreshPostsTable(){
+    const catColors = {"Essays":"var(--acc-mint)","Field Notes":"var(--acc-amber)","Reviews":"var(--acc-blue)","Q&A":"var(--acc-rose)"};
+    document.getElementById('posts-tbody').innerHTML = Store.posts.slice().reverse().map(p=>`
+      <tr>
+        <td style="max-width:280px;">${p.title}</td>
+        <td><span style="color:${catColors[p.category]}; font-weight:600; font-size:.82rem;"><i class="bi bi-circle-fill" style="font-size:.5rem; margin-right:.4rem;"></i>${p.category}</span></td>
+        <td>${p.author}</td>
+        <td><span class="badge-status ${p.status==='Published'?'badge-published':'badge-draft'}">${p.status}</span></td>
+        <td class="font-mono" style="font-size:.78rem;">${p.date}</td>
+        <td>
+          <div class="d-flex gap-1">
+            <button class="icon-btn" onclick="Admin.openEditor(${p.id})"><i class="bi bi-pencil"></i></button>
+            <button class="icon-btn danger" onclick="Admin.deletePost(${p.id})"><i class="bi bi-trash3"></i></button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  },
+
+  deletePost(id){
+    if(!confirm('Delete this post permanently?')) return;
+    Store.posts = Store.posts.filter(p=>p.id!==id);
+    Store.comments = Store.comments.filter(c=>c.postId!==id);
+    this.refreshPostsTable();
+    Toast.show('Post deleted');
+  },
+
+  openEditor(id){
+    const editing = id ? Store.getPost(id) : null;
+    document.getElementById('admin-content').innerHTML = `
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="admin-h1">${editing ? 'Edit post' : 'New post'}</div>
+        <button class="btn btn-sm" style="background:var(--admin-surface-2); color:var(--admin-text-soft); border:1px solid var(--admin-line);" onclick="Admin.showTab('posts')">
+          <i class="bi bi-x-lg"></i> Cancel
+        </button>
+      </div>
+      <div class="row g-4">
+        <div class="col-lg-8">
+          <div class="admin-panel p-3 mb-3">
+            <label class="form-label-admin">Title</label>
+            <input id="f-title" class="form-control admin-input mb-3" placeholder="Post title" value="${editing?.title || ''}">
+            <label class="form-label-admin">Content</label>
+            <div id="quill-editor">${editing?.content || ''}</div>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="admin-panel p-3 mb-3">
+            <label class="form-label-admin">Status</label>
+            <select id="f-status" class="form-select admin-select mb-3">
+              <option ${editing?.status==='Draft' || !editing ? 'selected':''}>Draft</option>
+              <option ${editing?.status==='Published' ? 'selected':''}>Published</option>
+            </select>
+            <label class="form-label-admin">Category</label>
+            <select id="f-category" class="form-select admin-select mb-3">
+              ${["Essays","Field Notes","Reviews","Q&A"].map(c=>`<option ${editing?.category===c?'selected':''}>${c}</option>`).join('')}
+            </select>
+            <label class="form-label-admin">Author</label>
+            <select id="f-author" class="form-select admin-select mb-3">
+              ${Store.users.map(u=>`<option ${editing?.author===u.name?'selected':''}>${u.name}</option>`).join('')}
+            </select>
+            <label class="form-label-admin">Tags (comma separated)</label>
+            <input id="f-tags" class="form-control admin-input mb-3" value="${editing?.tags.join(', ') || ''}">
+            <label class="form-label-admin">Excerpt</label>
+            <textarea id="f-excerpt" class="form-control admin-textarea mb-1" rows="3">${editing?.excerpt || ''}</textarea>
+          </div>
+          <div class="admin-panel p-3 mb-3">
+            <label class="form-label-admin">Cover image</label>
+            <div id="cover-preview-wrap">
+              ${editing?.cover ? `<img src="${editing.cover}" class="cover-preview mb-2" id="cover-preview-img">` : `<img class="cover-preview mb-2 hidden" id="cover-preview-img">`}
+            </div>
+            <div class="image-drop" onclick="document.getElementById('f-cover-file').click()">
+              <i class="bi bi-cloud-arrow-up fs-4 d-block mb-1"></i>
+              Click to upload an image
+            </div>
+            <input type="file" id="f-cover-file" accept="image/*" class="hidden" onchange="Admin.handleImageUpload(event)">
+            <input type="hidden" id="f-cover-data" value="${editing?.cover || ''}">
+          </div>
+          <button class="btn btn-evergreen w-100" onclick="Admin.savePost(${editing ? editing.id : 'null'})">
+            <i class="bi bi-check2"></i> ${editing ? 'Save changes' : 'Create post'}
+          </button>
+        </div>
+      </div>
+    `;
+    quill = new Quill('#quill-editor', { theme:'snow', placeholder:'Write your post…' });
+  },
+
+  handleImageUpload(e){
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = function(ev){
+      document.getElementById('f-cover-data').value = ev.target.result;
+      const img = document.getElementById('cover-preview-img');
+      img.src = ev.target.result;
+      img.classList.remove('hidden');
+    };
+    reader.readAsDataURL(file);
+  },
+
+  savePost(id){
+    const title = document.getElementById('f-title').value.trim();
+    const cover = document.getElementById('f-cover-data').value || "https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=1200&q=80";
+    if(!title){ Toast.show('Title is required'); return; }
+    const data = {
+      title,
+      content: quill.root.innerHTML,
+      status: document.getElementById('f-status').value,
+      category: document.getElementById('f-category').value,
+      author: document.getElementById('f-author').value,
+      tags: document.getElementById('f-tags').value.split(',').map(t=>t.trim()).filter(Boolean),
+      excerpt: document.getElementById('f-excerpt').value.trim(),
+      cover
+    };
+    if(id){
+      const post = Store.getPost(id);
+      Object.assign(post, data);
+      Toast.show('Post updated');
+    } else {
+      Store.posts.push({
+        id: Store.nextPostId++,
+        date: new Date().toISOString().slice(0,10),
+        readTime: Math.max(1, Math.round(quill.getText().split(' ').length/200)) + ' min read',
+        ...data
+      });
+      Toast.show('Post created');
+    }
+    this.showTab('posts');
+  },
+
+  /* ---------------- COMMENTS ---------------- */
+  renderComments(){
+    document.getElementById('admin-content').innerHTML = `
+      <div class="admin-h1 mb-4">Comments</div>
+      <div class="admin-panel">
+        <table class="admin-table">
+          <thead><tr><th>Post</th><th>Author</th><th>Comment</th><th>Status</th><th></th></tr></thead>
+          <tbody id="comments-tbody"></tbody>
+        </table>
+      </div>
+    `;
+    this.refreshCommentsTable();
+  },
+
+  refreshCommentsTable(){
+    document.getElementById('comments-tbody').innerHTML = Store.comments.slice().reverse().map((c,i)=>{
+      const post = Store.getPost(c.postId);
+      return `
+      <tr>
+        <td style="max-width:180px;">${post ? post.title : '(deleted post)'}</td>
+        <td>
+          <div class="d-flex align-items-center gap-2">
+            <div class="avatar-chip av-${i%6}" style="width:28px;height:28px;font-size:.8rem;">${c.author.charAt(0)}</div>
+            <span>${c.author}</span>
+          </div>
+        </td>
+        <td style="max-width:320px;">${c.text}</td>
+        <td><span class="badge-status ${c.status==='Approved'?'badge-approved':'badge-pending'}">${c.status}</span></td>
+        <td>
+          <div class="d-flex gap-1">
+            ${c.status!=='Approved' ? `<button class="icon-btn" onclick="Admin.setCommentStatus(${c.id},'Approved')"><i class="bi bi-check2"></i></button>` : ''}
+            <button class="icon-btn danger" onclick="Admin.deleteComment(${c.id})"><i class="bi bi-trash3"></i></button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+  },
+
+  setCommentStatus(id, status){
+    const c = Store.comments.find(c=>c.id===id);
+    if(c){ c.status = status; this.refreshCommentsTable(); Toast.show('Comment approved'); }
+  },
+  deleteComment(id){
+    Store.comments = Store.comments.filter(c=>c.id!==id);
+    this.refreshCommentsTable();
+    Toast.show('Comment deleted');
+  },
+
+  /* ---------------- USERS ---------------- */
+  renderUsers(){
+    document.getElementById('admin-content').innerHTML = `
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="admin-h1">Users</div>
+      </div>
+      <div class="row g-4">
+        <div class="col-lg-8">
+          <div class="admin-panel">
+            <table class="admin-table">
+              <thead><tr><th>Name</th><th>Email</th><th>Role</th><th></th></tr></thead>
+              <tbody id="users-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="admin-panel p-3">
+            <div class="fw-semibold mb-3" style="color:#fff;">Add user</div>
+            <label class="form-label-admin">Name</label>
+            <input id="u-name" class="form-control admin-input mb-3" placeholder="Full name">
+            <label class="form-label-admin">Email</label>
+            <input id="u-email" class="form-control admin-input mb-3" placeholder="name@marginalia.blog">
+            <label class="form-label-admin">Role</label>
+            <select id="u-role" class="form-select admin-select mb-3">
+              <option>Admin</option><option>Editor</option><option>Author</option>
+            </select>
+            <button class="btn btn-evergreen w-100" onclick="Admin.addUser()">Add user</button>
+          </div>
+        </div>
+      </div>
+    `;
+    this.refreshUsersTable();
+  },
+
+  refreshUsersTable(){
+    document.getElementById('users-tbody').innerHTML = Store.users.map((u,i)=>`
+      <tr>
+        <td>
+          <div class="d-flex align-items-center gap-2">
+            <div class="avatar-chip av-${i%6}">${u.name.charAt(0)}</div>
+            <span>${u.name}</span>
+          </div>
+        </td>
+        <td class="font-mono" style="font-size:.8rem; color:var(--admin-text-soft);">${u.email}</td>
+        <td><span class="role-badge role-${u.role}">${u.role}</span></td>
+        <td><button class="icon-btn danger" onclick="Admin.deleteUser(${u.id})"><i class="bi bi-trash3"></i></button></td>
+      </tr>
+    `).join('');
+  },
+
+  addUser(){
+    const name = document.getElementById('u-name').value.trim();
+    const email = document.getElementById('u-email').value.trim();
+    const role = document.getElementById('u-role').value;
+    if(!name || !email){ Toast.show('Name and email required'); return; }
+    Store.users.push({id: Date.now(), name, email, role});
+    this.refreshUsersTable();
+    Toast.show('User added');
+    document.getElementById('u-name').value='';
+    document.getElementById('u-email').value='';
+  },
+
+  deleteUser(id){
+    if(Store.users.length<=1){ Toast.show("Can't delete the last user"); return; }
+    Store.users = Store.users.filter(u=>u.id!==id);
+    this.refreshUsersTable();
+    Toast.show('User removed');
+  }
+};
+
+/* Boot */
+Router.go('home');
+</script>
+</body>
+</html>
